@@ -1,0 +1,6 @@
+{
+  "name": "Mangu Service UG",
+  "description": "Simple technician directory and management CRUD application for local service providers in Uganda.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

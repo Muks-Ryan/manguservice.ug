@@ -1,0 +1,186 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --color-primary: #1E63F1;
+    --color-primary-dark: #174EC2;
+    --color-primary-light: #EAF2FF;
+
+    --color-sidebar-client: #0E1C36;
+    --color-sidebar-technician: #0F5B2F;
+
+    --color-background: #F8FAFC;
+    --color-surface: #FFFFFF;
+    --color-card: #FFFFFF;
+
+    --color-text-primary: #0F172A;
+    --color-text-secondary: #64748B;
+    --color-text-muted: #94A3B8;
+
+    --color-border: #E2E8F0;
+    --color-success: #22C55E;
+    --color-warning: #F59E0B;
+    --color-danger: #EF4444;
+    --color-info: #3B82F6;
+
+    /* Admin System Tokens */
+    --admin-primary: #2563EB;
+    --admin-primary-dark: #1D4ED8;
+    --admin-bg: #F8FAFC;
+    --admin-card-bg: #FFFFFF;
+    --admin-card-radius: 18px;
+    --admin-border: #E2E8F0;
+  }
+
+  .dark {
+    --color-primary: #3B82F6;
+    --color-primary-dark: #2563EB;
+    --color-primary-light: rgba(59,130,246,0.15);
+
+    --color-background: #0B0F19;
+    --color-surface: #1E293B;
+    --color-card: #141C2E;
+
+    --color-text-primary: #F8FAFC;
+    --color-text-secondary: #94A3B8;
+    --color-text-muted: #64748B;
+
+    --color-border: #1E293B;
+
+    --admin-bg: #0B0F19;
+    --admin-card-bg: #141C2E;
+    --admin-border: #1E293B;
+  }
+
+  body {
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    background-color: var(--color-background);
+    color: var(--color-text-primary);
+  }
+
+  /* Universal high-contrast visibility for form inputs across all themes */
+  input:not([type="checkbox"]):not([type="radio"]),
+  textarea,
+  select {
+    color: #0f172a; /* Deep visible slate-900 */
+    caret-color: #d97706; /* High contrast amber caret */
+  }
+
+  input::placeholder,
+  textarea::placeholder {
+    color: #64748b !important; /* Visible slate-500 */
+    opacity: 1;
+  }
+
+  /* Browser autofill text color fix */
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover, 
+  input:-webkit-autofill:focus,
+  textarea:-webkit-autofill,
+  select:-webkit-autofill {
+    -webkit-text-fill-color: #0f172a !important;
+  }
+
+  /* Dark mode inputs on dark surfaces */
+  .dark input:not([type="checkbox"]):not([type="radio"]),
+  .dark textarea,
+  .dark select {
+    color: #f8fafc;
+  }
+
+  .dark input::placeholder,
+  .dark textarea::placeholder {
+    color: #94a3b8 !important;
+  }
+
+  .dark input:-webkit-autofill,
+  .dark input:-webkit-autofill:hover, 
+  .dark input:-webkit-autofill:focus {
+    -webkit-text-fill-color: #f8fafc !important;
+  }
+
+  /* In dark mode, if an input sits on an explicit white or light container, enforce dark text */
+  .dark .bg-white input:not([type="checkbox"]):not([type="radio"]),
+  .dark .bg-white textarea,
+  .dark .bg-white select,
+  .dark .bg-slate-50 input:not([type="checkbox"]):not([type="radio"]),
+  .dark .bg-slate-50 textarea,
+  .dark .bg-slate-50 select,
+  .dark .bg-slate-100 input:not([type="checkbox"]):not([type="radio"]),
+  .dark .bg-slate-100 textarea,
+  .dark .bg-slate-100 select,
+  .dark .bg-amber-50 input:not([type="checkbox"]):not([type="radio"]),
+  .dark .bg-amber-50 textarea,
+  .dark .bg-amber-50 select {
+    color: #0f172a !important;
+    background-color: #ffffff;
+  }
+
+  .dark .bg-white input::placeholder,
+  .dark .bg-white textarea::placeholder,
+  .dark .bg-slate-50 input::placeholder,
+  .dark .bg-slate-100 input::placeholder {
+    color: #64748b !important;
+  }
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-slide-up {
+  animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Design System - Logo Classes */
+.mangu-icon {
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.06);
+  object-fit: contain;
+  transition: transform 250ms ease, box-shadow 250ms ease;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.mangu-icon:hover {
+  transform: scale(1.05);
+  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08);
+}
+
+.mangu-icon--xs { width: 32px; height: 32px; border-radius: 6px; }
+.mangu-icon--sm { width: 40px; height: 40px; border-radius: 8px; }
+.mangu-icon--md { width: 52px; height: 52px; border-radius: 10px; }
+.mangu-icon--lg { width: 80px; height: 80px; border-radius: 12px; }
+.mangu-icon--xl { width: 100px; height: 100px; border-radius: 16px; }
+.mangu-icon--navbar { width: 40px; height: 40px; border-radius: 10px; }
+.mangu-icon--sidebar { width: 38px; height: 38px; border-radius: 10px; }
+.mangu-icon--auth { width: 90px; height: 90px; border-radius: 16px; }
+
+.dark .mangu-icon {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.dark .mangu-icon:hover {
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5);
+}
+
