@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ShieldCheck, Save, Users, Database, Globe, Phone, Mail, CheckCircle2, Download } from 'lucide-react';
 import { User, SystemSettings } from '../../types';
 import { authService } from '../../services/authService';
@@ -13,16 +13,24 @@ export const AdminSettings: React.FC<AdminSettingsProps> = ({ currentUser, onSho
   const [settings, setSettings] = useState<SystemSettings>(initialSettings);
   const [loading, setLoading] = useState(false);
   const [savedSuccess, setSavedSuccess] = useState(false);
+  const [allUsers, setAllUsers] = useState<User[]>([]);
+  const [usersLoading, setUsersLoading] = useState(true);
+  const [usersError, setUsersError] = useState('');
 
-  // Load all users from localStorage to view registered accounts
-  const [allUsers, setAllUsers] = useState<User[]>(() => {
-    try {
-      const raw = localStorage.getItem('mangu_users_v1');
-      return raw ? JSON.parse(raw) : [];
-    } catch {
-      return [];
-    }
-  });
+  useEffect(() => {
+    let isCurrent = true;
+    authService.getUsers()
+      .then((users) => {
+        if (isCurrent) setAllUsers(users);
+      })
+      .catch((error: Error) => {
+        if (isCurrent) setUsersError(error.message || 'Could not load user accounts.');
+      })
+      .finally(() => {
+        if (isCurrent) setUsersLoading(false);
+      });
+    return () => { isCurrent = false; };
+  }, [currentUser.id]);
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
@@ -144,9 +152,9 @@ export const AdminSettings: React.FC<AdminSettingsProps> = ({ currentUser, onSho
         <div className="flex items-center justify-between">
           <h2 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
             <Users className="w-3.5 h-3.5 text-blue-500" />
-            <span>Registered Role Accounts ({allUsers.length})</span>
+            <span>Registered Role Accounts ({usersLoading ? '...' : allUsers.length})</span>
           </h2>
-          <span className="text-[11px] text-slate-500">Live Role-Based Accounts</span>
+          <span className="text-[11px] text-slate-500">{usersError || 'Live Role-Based Accounts'}</span>
         </div>
 
         <div className="overflow-x-auto">
@@ -160,7 +168,13 @@ export const AdminSettings: React.FC<AdminSettingsProps> = ({ currentUser, onSho
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
-              {allUsers.map((u) => (
+              {usersLoading ? (
+                <tr><td colSpan={4} className="py-5 px-3 text-center text-slate-500">Loading accounts...</td></tr>
+              ) : usersError ? (
+                <tr><td colSpan={4} className="py-5 px-3 text-center text-red-600 dark:text-red-400">{usersError}</td></tr>
+              ) : allUsers.length === 0 ? (
+                <tr><td colSpan={4} className="py-5 px-3 text-center text-slate-500">No accounts found.</td></tr>
+              ) : allUsers.map((u) => (
                 <tr key={u.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30">
                   <td className="py-2.5 px-3 font-bold text-slate-900 dark:text-white">
                     {u.name}
@@ -198,9 +212,9 @@ export const AdminSettings: React.FC<AdminSettingsProps> = ({ currentUser, onSho
             <Database className="w-5 h-5" />
           </div>
           <div>
-            <h4 className="text-sm font-bold">PostgreSQL Schema & Seed Script</h4>
+            <h4 className="text-sm font-bold">PostgreSQL Schema</h4>
             <p className="text-xs text-slate-400">
-              Download clean SQL ready for execution in PostgreSQL, Supabase, or DBeaver.
+              Download the schema-only SQL for PostgreSQL-compatible databases.
             </p>
           </div>
         </div>

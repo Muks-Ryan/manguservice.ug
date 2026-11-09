@@ -42,3 +42,22 @@ export interface SystemSettings {
   defaultCurrency: string;
   allowClientRegistration: boolean;
 }
+
+export type BookingStatus = 'Pending' | 'Accepted' | 'Declined' | 'Cancelled' | 'Completed';
+
+export interface Booking {
+  id: string;
+  clientId: string;
+  technicianId: string;
+  clientName: string;
+  technicianName: string;
+  trade: string;
+  town: string;
+  serviceDescription: string;
+  scheduledFor: string;
+  estimatedHours: number;
+  estimatedCostUgx: number;
+  status: BookingStatus;
+  createdAt: string;
+  updatedAt: string;
+}

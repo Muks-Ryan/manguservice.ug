@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Wrench, Phone, MapPin, DollarSign, FileText, Save, CheckCircle2, Shield } from 'lucide-react';
 import { Technician, User } from '../../types';
-import { technicianService } from '../../services/technicianService';
+import { technicianService, TRADES } from '../../services/technicianService';
 import { authService } from '../../services/authService';
 
 interface TechnicianSettingsProps {
@@ -28,20 +28,12 @@ export const TechnicianSettings: React.FC<TechnicianSettingsProps> = ({
   const [loading, setLoading] = useState(false);
   const [savedSuccess, setSavedSuccess] = useState(false);
 
-  const trades = [
-    'Electrical',
-    'Plumbing',
-    'Appliance Repair',
-    'ICT & Computers',
-    'Carpentry',
-    'Auto Mechanics',
-    'Welding & Metalwork',
-    'HVAC & Air Conditioning',
-    'Masonry & Painting',
-  ];
-
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!technician) {
+      onShowToast('Profile unavailable', 'Your account is not linked to a technician record. Please contact an administrator.', 'error');
+      return;
+    }
     if (!name.trim() || !phone.trim() || !town.trim() || !bio.trim()) {
       onShowToast('Validation Error', 'Please complete all required fields.', 'error');
       return;
@@ -123,7 +115,7 @@ export const TechnicianSettings: React.FC<TechnicianSettingsProps> = ({
                 onChange={(e) => setTrade(e.target.value)}
                 className="w-full px-3.5 py-2 rounded-xl text-xs sm:text-sm bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-500"
               >
-                {trades.map((t) => (
+                {TRADES.map((t) => (
                   <option key={t} value={t}>
                     {t}
                   </option>
@@ -216,15 +208,15 @@ export const TechnicianSettings: React.FC<TechnicianSettingsProps> = ({
               <Shield className="w-4 h-4" />
             </div>
             <div>
-              <p className="text-xs font-bold text-slate-900 dark:text-white">Role: Certified Technician</p>
+              <p className="text-xs font-bold text-slate-900 dark:text-white">Technician account</p>
               <p className="text-[11px] text-slate-600 dark:text-slate-400">
-                Your profile is active in the Ugandan national technician directory.
+                Your directory status is {technician?.status || 'not linked'}.
               </p>
             </div>
           </div>
 
           <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-200 text-amber-900 dark:bg-amber-900/80 dark:text-amber-200 uppercase">
-            Active Provider
+            {technician?.status || 'Not linked'}
           </span>
         </div>
 

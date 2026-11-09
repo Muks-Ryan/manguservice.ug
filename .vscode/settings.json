@@ -6,7 +6,7 @@
             "server": "localhost",
             "port": 5432,
             "driver": "PostgreSQL",
-            "name": "mangu services conn",
+            "name": "mangu_db conn",
             "database": "mangu_db",
             "username": "postgres",
             "password": "postgre"

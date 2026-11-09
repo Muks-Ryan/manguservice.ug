@@ -113,18 +113,6 @@ export const Navbar: React.FC<NavbarProps> = ({
               <RotateCcw className="w-4 h-4" />
             </button>
           )}
-
-          {/* Download database.sql */}
-          <a
-            href="/database.sql"
-            download="database.sql"
-            title="Download PostgreSQL schema"
-            className="hidden lg:inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors"
-          >
-            <Download className="w-3.5 h-3.5" />
-            <span>SQL</span>
-          </a>
-
           {/* Dark / Light Toggle */}
           <button
             onClick={onToggleDarkMode}

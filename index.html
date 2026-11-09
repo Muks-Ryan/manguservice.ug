@@ -7,6 +7,15 @@
     <meta name="description" content="Simple technician directory and management CRUD application for local service providers in Uganda." />
     <meta property="og:title" content="Mangu Service UG" />
     <meta property="og:description" content="Simple technician directory and management CRUD application for local service providers in Uganda." />
+    <script>
+      (() => {
+        const savedTheme = localStorage.getItem('mangu_theme');
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const theme = savedTheme === 'dark' || savedTheme === 'light' ? savedTheme : (prefersDark ? 'dark' : 'light');
+        document.documentElement.classList.toggle('dark', theme === 'dark');
+        document.documentElement.style.colorScheme = theme;
+      })();
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">

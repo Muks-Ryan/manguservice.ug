@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Navbar } from './components/Navbar';
 import { StatsBar } from './components/StatsBar';
 import { TechnicianList } from './components/TechnicianList';
@@ -10,6 +10,8 @@ import { Toast, ToastMessage } from './components/Toast';
 import { AuthSwitchBar } from './components/auth/AuthSwitchBar';
 import { UserLoginPage } from './components/auth/UserLoginPage';
 import { AdminLoginPage } from './components/auth/AdminLoginPage';
+import { ForgotPasswordPage } from './components/auth/ForgotPasswordPage';
+import { LandingPage } from './components/LandingPage';
 
 import { ClientDashboard } from './components/client/ClientDashboard';
 import { ClientSettings } from './components/client/ClientSettings';
@@ -20,11 +22,16 @@ import { AdminSettings } from './components/admin/AdminSettings';
 import { technicianService } from './services/technicianService';
 import { authService } from './services/authService';
 import { Technician, TechnicianFormData, FilterOptions, User, UserRole } from './types';
+import { Booking } from './types';
+import { bookingService } from './services/bookingService';
+import { AppLoader, PageSkeleton } from './components/Loading';
+import { AuthNavigation } from './components/auth/AuthNavigation';
+import { applyTheme, getPreferredTheme } from './services/themeService';
 
 export const App: React.FC = () => {
   // Theme State
   const [darkMode, setDarkMode] = useState<boolean>(() => {
-    return localStorage.getItem('mangu_theme') === 'dark';
+    return getPreferredTheme() === 'dark';
   });
 
   // Auth State
@@ -33,6 +40,18 @@ export const App: React.FC = () => {
   });
   const [authLoading, setAuthLoading] = useState(true);
   const [activeAuthPortal, setActiveAuthPortal] = useState<'user' | 'admin'>('user');
+  const [authHistory, setAuthHistory] = useState<Array<'landing' | 'login' | 'forgot'>>(['landing']);
+  const [authHistoryIndex, setAuthHistoryIndex] = useState(0);
+  const authPage = authHistory[authHistoryIndex];
+
+  const navigateAuth = (page: 'landing' | 'login' | 'forgot') => {
+    if (page === authPage) return;
+    setAuthHistory((history) => [...history.slice(0, authHistoryIndex + 1), page]);
+    setAuthHistoryIndex((index) => index + 1);
+  };
+
+  const goBackAuth = () => setAuthHistoryIndex((index) => Math.max(0, index - 1));
+  const goForwardAuth = () => setAuthHistoryIndex((index) => Math.min(authHistory.length - 1, index + 1));
 
   // Active View ('dashboard' | 'settings')
   const [activeView, setActiveView] = useState<'dashboard' | 'settings'>('dashboard');
@@ -41,6 +60,8 @@ export const App: React.FC = () => {
   const [allTechnicians, setAllTechnicians] = useState<Technician[]>([]);
   const [filteredTechnicians, setFilteredTechnicians] = useState<Technician[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [bookings, setBookings] = useState<Booking[]>([]);
+  const bookingsRequestId = useRef(0);
 
   // Filters State
   const [filters, setFilters] = useState<FilterOptions>({
@@ -75,20 +96,11 @@ export const App: React.FC = () => {
   const handleToggleDarkMode = () => {
     const nextMode = !darkMode;
     setDarkMode(nextMode);
-    localStorage.setItem('mangu_theme', nextMode ? 'dark' : 'light');
-    if (nextMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
+    applyTheme(nextMode ? 'dark' : 'light');
   };
 
   useEffect(() => {
-    if (darkMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
+    applyTheme(darkMode ? 'dark' : 'light');
   }, [darkMode]);
 
   // Restore the server session before rendering role-specific application content.
@@ -118,11 +130,34 @@ export const App: React.FC = () => {
     loadData();
   }, [loadData]);
 
+  const loadBookings = useCallback(async () => {
+    const requestId = ++bookingsRequestId.current;
+    if (!currentUser || currentUser.role === 'admin') {
+      setBookings([]);
+      return;
+    }
+    setBookings([]);
+    try {
+      const nextBookings = await bookingService.getAll();
+      if (requestId === bookingsRequestId.current) setBookings(nextBookings);
+    } catch (err: any) {
+      if (requestId === bookingsRequestId.current) {
+        setBookings([]);
+        showToast('Booking load failed', err.message || 'Could not load service requests.', 'error');
+      }
+    }
+  }, [currentUser]);
+
+  useEffect(() => {
+    loadBookings();
+  }, [loadBookings]);
+
   // AUTH ACTIONS
   const handleLoginSuccess = () => {
     const user = authService.getCurrentUser();
     setCurrentUser(user);
     setActiveView('dashboard');
+    navigateAuth('login');
     showToast('Signed In', `Welcome back, ${user?.name || 'User'}!`, 'success');
   };
 
@@ -188,7 +223,7 @@ export const App: React.FC = () => {
     : null;
 
   if (authLoading) {
-    return <div className="min-h-screen flex items-center justify-center text-sm text-slate-500">Loading session...</div>;
+    return <AppLoader />;
   }
 
   return (
@@ -196,6 +231,8 @@ export const App: React.FC = () => {
       {/* 1. NOT LOGGED IN: Combined User Portal (Client & Technician) vs Separate Admin Portal */}
       {!currentUser ? (
         <div className="flex-1 flex flex-col">
+          <AuthNavigation canGoBack={authHistoryIndex > 0} canGoForward={authHistoryIndex < authHistory.length - 1} onBack={goBackAuth} onForward={goForwardAuth} />
+          {authPage === 'landing' ? <LandingPage darkMode={darkMode} onToggleDarkMode={handleToggleDarkMode} onGetStarted={() => navigateAuth('login')} /> : authPage === 'forgot' ? <ForgotPasswordPage onBack={() => navigateAuth('login')} /> : <>
           {/* Top Switcher Bar between User Portal and Admin Portal */}
           <AuthSwitchBar
             activePortal={activeAuthPortal}
@@ -210,6 +247,7 @@ export const App: React.FC = () => {
               <UserLoginPage
                 onSuccess={handleLoginSuccess}
                 onSwitchToAdmin={() => setActiveAuthPortal('admin')}
+                onForgotPassword={() => navigateAuth('forgot')}
               />
             ) : (
               <AdminLoginPage
@@ -218,6 +256,7 @@ export const App: React.FC = () => {
               />
             )}
           </div>
+          </>}
         </div>
       ) : (
         /* 2. LOGGED IN: Role-specific Navigation, Dashboards, and Settings */
@@ -240,6 +279,7 @@ export const App: React.FC = () => {
           />
 
           <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6">
+            {loading ? <PageSkeleton /> : <>
             {/* ============================================================ */}
             {/* ADMIN ROLE VIEWS */}
             {/* ============================================================ */}
@@ -288,6 +328,8 @@ export const App: React.FC = () => {
                     onRefreshData={loadData}
                     onShowToast={showToast}
                     onNavigateToSettings={() => setActiveView('settings')}
+                    bookings={bookings}
+                    onBookingsChange={loadBookings}
                   />
                 ) : (
                   <TechnicianSettings
@@ -312,6 +354,9 @@ export const App: React.FC = () => {
                     technicians={filteredTechnicians}
                     filters={filters}
                     onFilterChange={setFilters}
+                    bookings={bookings}
+                    onBookingsChange={loadBookings}
+                    onShowToast={showToast}
                   />
                 ) : (
                   <ClientSettings
@@ -322,6 +367,7 @@ export const App: React.FC = () => {
                 )}
               </>
             )}
+            </>}
           </main>
         </div>
       )}

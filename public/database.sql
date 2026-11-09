@@ -1,79 +1,105 @@
--- ============================================================================
--- Mangu Service UG - Simplified Role-Based PostgreSQL Database Schema
--- Entities: users (client, technician, admin) and technicians
--- Compatible with: PostgreSQL 12+, pgAdmin, DBeaver, Supabase, Neon, psql
--- ============================================================================
+-- Mangu Service UG PostgreSQL schema
+-- Schema-only setup for the Express API. No demo users or passwords are seeded.
+-- Compatible with PostgreSQL 13+ (including Supabase, Neon, Railway, and psql).
 
 BEGIN;
 
--- Drop previous tables if exist for clean reload
-DROP TABLE IF EXISTS users CASCADE;
-DROP TABLE IF EXISTS technicians CASCADE;
-DROP TYPE IF EXISTS user_role CASCADE;
-DROP TYPE IF EXISTS technician_status CASCADE;
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
--- Enums
-CREATE TYPE user_role AS ENUM (
-    'admin',
-    'technician',
-    'client'
-);
+DO $$
+BEGIN
+    IF to_regtype('user_role') IS NULL THEN
+        CREATE TYPE user_role AS ENUM ('admin', 'technician', 'client');
+    END IF;
+    IF to_regtype('technician_status') IS NULL THEN
+        CREATE TYPE technician_status AS ENUM ('Active', 'Available', 'Busy', 'Inactive');
+    END IF;
+    IF to_regtype('booking_status') IS NULL THEN
+        CREATE TYPE booking_status AS ENUM ('Pending', 'Accepted', 'Declined', 'Cancelled', 'Completed');
+    END IF;
+END $$;
 
-CREATE TYPE technician_status AS ENUM (
-    'Active',
-    'Available',
-    'Busy',
-    'Inactive'
-);
-
--- Core Entity Table: technicians
-CREATE TABLE technicians (
-    id VARCHAR(64) PRIMARY KEY,
+CREATE TABLE IF NOT EXISTS technicians (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(150) NOT NULL,
     trade VARCHAR(100) NOT NULL,
     phone VARCHAR(30) NOT NULL,
-    email VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL UNIQUE,
     town VARCHAR(100) NOT NULL,
     hourly_rate_ugx NUMERIC(12, 2) NOT NULL DEFAULT 30000.00 CHECK (hourly_rate_ugx >= 0),
     bio TEXT NOT NULL,
     status technician_status NOT NULL DEFAULT 'Available',
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
--- Authentication & Role Table: users
-CREATE TABLE users (
-    id VARCHAR(64) PRIMARY KEY,
+CREATE TABLE IF NOT EXISTS users (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(150) NOT NULL,
-    email VARCHAR(255) UNIQUE NOT NULL,
+    email VARCHAR(255) NOT NULL UNIQUE,
     role user_role NOT NULL DEFAULT 'client',
     phone VARCHAR(30),
-    town VARCHAR(100) DEFAULT 'Kampala',
-    technician_id VARCHAR(64) REFERENCES technicians(id) ON DELETE SET NULL,
-    password_hash VARCHAR(255) NOT NULL,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    town VARCHAR(100) NOT NULL DEFAULT 'Kampala',
+    technician_id UUID UNIQUE REFERENCES technicians(id) ON DELETE SET NULL,
+    password_hash TEXT NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
--- Helpful Indexes for Fast CRUD Queries
-CREATE INDEX idx_technicians_trade ON technicians(trade);
-CREATE INDEX idx_technicians_town ON technicians(town);
-CREATE INDEX idx_technicians_status ON technicians(status);
-CREATE INDEX idx_users_email ON users(email);
-CREATE INDEX idx_users_role ON users(role);
+CREATE TABLE IF NOT EXISTS password_reset_tokens (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    token_hash TEXT NOT NULL UNIQUE,
+    expires_at TIMESTAMPTZ NOT NULL,
+    used_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
 
--- Seed Initial Ugandan Technician Records
-INSERT INTO technicians (id, name, trade, phone, email, town, hourly_rate_ugx, bio, status) VALUES
-('tech-1', 'Kato Joseph', 'Electrical', '+256 701 452 890', 'kato.joseph@mangu.ug', 'Kampala', 35000.00, 'Certified Master Electrician specializing in domestic wiring, solar power installations, and generator maintenance across Kampala.', 'Available'),
-('tech-2', 'Akello Grace', 'Plumbing', '+256 772 314 902', 'akello.grace@mangu.ug', 'Entebbe', 30000.00, 'Licensed plumber with deep expertise in emergency leaks, pressure water tanks, drainage unclogging, and sanitary fittings.', 'Available'),
-('tech-3', 'Mukasa Ivan', 'Appliance Repair', '+256 782 119 450', 'mukasa.ivan@mangu.ug', 'Jinja', 40000.00, 'Cooling technician with 10 years experience servicing Samsung, LG, and Hisense refrigerators, AC units, and washing machines.', 'Busy'),
-('tech-4', 'Okello Patrick', 'ICT & Computers', '+256 753 980 123', 'okello.p@mangu.ug', 'Kampala', 30000.00, 'Computer engineer offering component-level laptop motherboard repairs, WiFi router setup, and CCTV security camera installation.', 'Available'),
-('tech-5', 'Namubiru Sarah', 'Carpentry', '+256 704 551 889', 'sarah.namubiru@mangu.ug', 'Kampala', 35000.00, 'Precision woodworker specializing in custom kitchen cabinets, fitted bedroom wardrobes, office desks, and door lock installations.', 'Active'),
-('tech-6', 'Ssemwanga David', 'Auto Mechanics', '+256 779 881 223', 'david.ssemwanga@mangu.ug', 'Jinja', 40000.00, 'Vehicle mechanic providing mobile OBD2 computer scanning, brake system overhauls, alternator repairs, and general engine tuning.', 'Inactive');
+CREATE TABLE IF NOT EXISTS bookings (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    client_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    technician_id UUID NOT NULL REFERENCES technicians(id) ON DELETE CASCADE,
+    service_description TEXT NOT NULL,
+    scheduled_for TIMESTAMPTZ NOT NULL,
+    estimated_hours NUMERIC(5, 2) NOT NULL CHECK (estimated_hours > 0 AND estimated_hours <= 24),
+    estimated_cost_ugx NUMERIC(12, 2) NOT NULL CHECK (estimated_cost_ugx >= 0),
+    status booking_status NOT NULL DEFAULT 'Pending',
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
 
--- Seed Role Accounts (admin, technician, client)
-INSERT INTO users (id, name, email, role, phone, town, technician_id, password_hash) VALUES
-('user-admin', 'Mangu Admin', 'admin@mangu.ug', 'admin', '+256 700 100 001', 'Kampala', NULL, 'admin123'),
-('user-tech-1', 'Kato Joseph', 'kato.joseph@mangu.ug', 'technician', '+256 701 452 890', 'Kampala', 'tech-1', 'tech123'),
-('user-client-1', 'Harriet Nalubega', 'harriet@mangu.ug', 'client', '+256 702 334 112', 'Kampala', NULL, 'client123');
+CREATE INDEX IF NOT EXISTS idx_technicians_trade ON technicians(trade);
+CREATE INDEX IF NOT EXISTS idx_technicians_town ON technicians(town);
+CREATE INDEX IF NOT EXISTS idx_technicians_status ON technicians(status);
+CREATE INDEX IF NOT EXISTS idx_technicians_created_at ON technicians(created_at DESC);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_technicians_email_lower ON technicians(LOWER(email));
+CREATE INDEX IF NOT EXISTS idx_users_role ON users(role);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email_lower ON users(LOWER(email));
+CREATE INDEX IF NOT EXISTS idx_password_reset_tokens_user ON password_reset_tokens(user_id);
+CREATE INDEX IF NOT EXISTS idx_password_reset_tokens_expiry ON password_reset_tokens(expires_at);
+CREATE INDEX IF NOT EXISTS idx_bookings_client_schedule ON bookings(client_id, scheduled_for);
+CREATE INDEX IF NOT EXISTS idx_bookings_technician_schedule ON bookings(technician_id, scheduled_for);
+CREATE INDEX IF NOT EXISTS idx_bookings_status ON bookings(status);
+
+CREATE OR REPLACE FUNCTION set_updated_at()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    NEW.updated_at = CURRENT_TIMESTAMP;
+    RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS technicians_set_updated_at ON technicians;
+CREATE TRIGGER technicians_set_updated_at
+BEFORE UPDATE ON technicians
+FOR EACH ROW
+EXECUTE FUNCTION set_updated_at();
+
+DROP TRIGGER IF EXISTS bookings_set_updated_at ON bookings;
+CREATE TRIGGER bookings_set_updated_at
+BEFORE UPDATE ON bookings
+FOR EACH ROW
+EXECUTE FUNCTION set_updated_at();
 
 COMMIT;

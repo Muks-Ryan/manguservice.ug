@@ -146,6 +146,59 @@ npm run build
 
 ---
 
-## 7. License & Credits
+## 7. Future Enhancements & Product Roadmap
+
+The current platform already provides a strong base for technician discovery, booking workflows, and admin oversight. The next phase of growth should focus on deeper operational automation, stronger trust features, and better scalability for real-world service delivery across Uganda.
+
+### 7.1. Advanced Booking & Dispatch Features
+- Add a full service request lifecycle with job scheduling, rescheduling, and cancellation logic.
+- Introduce automated technician matching based on location, skills, availability, and estimated response time.
+- Add dispatch queues for urgent jobs, recurring maintenance requests, and multi-service package bookings.
+
+### 7.2. Trust, Reviews & Reputation Systems
+- Expand review scoring with quality, punctuality, communication, and professionalism metrics.
+- Add technician badges, achievement milestones, and recommendation history for higher trust visibility.
+- Enable client verification and dispute reporting for service complaints and claims.
+
+### 7.3. Finance & Payments Expansion
+- Integrate real Mobile Money workflows for MTN MoMo and Airtel Money payments.
+- Add escrow-style payment handling, payout approvals, and transaction auditing.
+- Introduce service fees, commissions, refunds, and invoice generation for admin and technicians.
+
+### 7.4. Admin Intelligence & Analytics
+- Provide dashboards for revenue, service volume, technician productivity, and zone activity trends.
+- Add operational KPIs such as response time, booking conversion rate, and completion rate by town.
+- Support exportable reports for finance, compliance, and business performance reviews.
+
+### 7.5. Communication & Engagement
+- Add in-app messaging between clients and technicians for job coordination.
+- Introduce system alerts, SMS reminders, and appointment notifications for all stakeholders.
+- Support push notifications for job confirmations, completion reminders, and payment updates.
+
+### 7.6. Security, Compliance & Governance
+- Introduce role-based access enforcement, audit trails, and permission controls for sensitive data.
+- Add document verification workflows with stronger identity checks and expiry monitoring.
+- Support secure file storage, signed transactions, and platform policy controls.
+
+### 7.7. Mobile Experience & Accessibility
+- Develop a mobile-first interface or native mobile app for technicians and clients.
+- Improve accessibility for low-bandwidth users, including simplified layouts and offline-ready features.
+- Add multilingual support for English, Luganda, and other regional languages used in Uganda.
+
+### 7.8. AI & Automation Opportunities
+- Add AI-assisted technician recommendations based on service history and customer preferences.
+- Automate route suggestions, service categorization, and priority assignment for high-demand areas.
+- Use predictive analytics to forecast service demand and technician load by region.
+
+### 7.9. Platform Growth & Scalability
+- Expand to new towns, categories, and service verticals beyond the current core offerings.
+- Add partner integrations for logistics, financing, insurance, and telecommunications.
+- Prepare the platform for broader multi-tenant operations and higher transaction volumes.
+
+Overall, the platform roadmap should move from a strong demo and prototype foundation toward a trusted commercial marketplace for skilled trades and home services in Uganda.
+
+---
+
+## 8. License & Credits
 
 Developed for **Mangu Service UG** — Connecting Uganda with trusted, verified trade skills.

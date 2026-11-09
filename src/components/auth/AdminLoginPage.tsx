@@ -11,6 +11,8 @@ interface AdminLoginPageProps {
 export const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onSuccess, onSwitchToUserPortal }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -24,7 +26,7 @@ export const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onSuccess, onSwi
 
     try {
       setLoading(true);
-      await authService.login(email, password, 'admin');
+      await authService.login(email, password, 'admin', rememberMe);
       onSuccess();
     } catch (err: any) {
       setError(err.message || 'Administrative verification failed.');
@@ -85,14 +87,20 @@ export const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onSuccess, onSwi
               Security Key / Password
             </label>
             <input
-              type="password"
+              type={showPassword ? 'text' : 'password'}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
               required
               className="w-full bg-slate-800/90 text-white text-xs sm:text-sm px-3.5 py-2.5 rounded-xl border border-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500"
             />
+            <label className="mt-2 flex items-center gap-2 text-xs text-slate-400"><input type="checkbox" checked={showPassword} onChange={(e) => setShowPassword(e.target.checked)} className="accent-emerald-500" />Show password</label>
           </div>
+
+          <label className="flex items-center gap-2 text-xs text-slate-400">
+            <input type="checkbox" checked={rememberMe} onChange={(e) => setRememberMe(e.target.checked)} className="accent-emerald-500" />
+            <span>Remember me</span>
+          </label>
 
           <button
             type="submit"

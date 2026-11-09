@@ -2,8 +2,10 @@
 import { Router } from 'express';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import { isValidPhoneNumber } from 'libphonenumber-js';
+import crypto from 'node:crypto';
 import { pool } from '../db';
-import { requireAuth } from '../middleware/auth';
+import { requireAuth, requireRole } from '../middleware/auth';
 
 const router = Router();
 const sessionCookie = 'session';
@@ -14,23 +16,24 @@ function jwtSecret(): string {
 	return process.env.JWT_SECRET;
 }
 
-function cookieOptions() {
+function cookieOptions(rememberMe = false) {
 	return {
 		httpOnly: true,
 		sameSite: isProduction ? 'none' : 'lax' as const,
 		secure: isProduction,
-		maxAge: 8 * 60 * 60 * 1000,
+		maxAge: rememberMe ? 30 * 24 * 60 * 60 * 1000 : 8 * 60 * 60 * 1000,
 		domain: process.env.COOKIE_DOMAIN || undefined,
 	};
 }
 
-function setSessionCookie(res: Parameters<Router['post']>[1] extends never ? never : any, user: any): void {
+function setSessionCookie(res: Parameters<Router['post']>[1] extends never ? never : any, user: any, rememberMe = false): void {
+	const expiresIn = rememberMe ? '30d' : '8h';
 	const token = jwt.sign(
 		{ role: user.role, technicianId: user.technician_id ?? undefined },
 		jwtSecret(),
-		{ subject: user.id, expiresIn: '8h' }
+		{ subject: user.id, expiresIn }
 	);
-	res.cookie(sessionCookie, token, cookieOptions());
+	res.cookie(sessionCookie, token, cookieOptions(rememberMe));
 }
 
 function publicUser(user: any) {
@@ -45,6 +48,40 @@ function publicUser(user: any) {
 	};
 }
 
+function validPassword(password: unknown): password is string {
+	return typeof password === 'string' && password.length >= 10 && password.length <= 128 && /[A-Z]/.test(password) && /[^A-Za-z0-9]/.test(password);
+}
+
+router.post('/forgot-password', async (req, res) => {
+	const email = typeof req.body?.email === 'string' ? req.body.email.trim().toLowerCase() : '';
+	if (!email) return res.status(400).json({ error: 'A valid email address is required.' });
+	try {
+		const result = await pool.query('SELECT id FROM users WHERE lower(email) = $1', [email]);
+		if (!result.rows[0]) return res.json({ message: 'If an account exists, password reset instructions have been created.' });
+		const token = crypto.randomBytes(32).toString('hex');
+		const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+		await pool.query('DELETE FROM password_reset_tokens WHERE user_id = $1 OR expires_at < now()', [result.rows[0].id]);
+		await pool.query('INSERT INTO password_reset_tokens (user_id, token_hash, expires_at) VALUES ($1, $2, now() + interval \'30 minutes\')', [result.rows[0].id, tokenHash]);
+		res.json({ message: 'Reset instructions created. Use the reset token to set a new password.', resetToken: token });
+	} catch (error) { console.error(error); res.status(500).json({ error: 'Could not create a password reset request.' }); }
+});
+
+router.post('/reset-password', async (req, res) => {
+	const { token, password } = req.body ?? {};
+	if (typeof token !== 'string' || !validPassword(password)) return res.status(400).json({ error: 'Use a valid token and a password with at least 10 characters, one uppercase letter, and one special character.' });
+	const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+	const client = await pool.connect();
+	try {
+		await client.query('BEGIN');
+		const result = await client.query('SELECT user_id FROM password_reset_tokens WHERE token_hash = $1 AND used_at IS NULL AND expires_at > now() FOR UPDATE', [tokenHash]);
+		if (!result.rows[0]) { await client.query('ROLLBACK'); return res.status(400).json({ error: 'This reset token is invalid or expired.' }); }
+		await client.query('UPDATE users SET password_hash = $1 WHERE id = $2', [await bcrypt.hash(password, 12), result.rows[0].user_id]);
+		await client.query('UPDATE password_reset_tokens SET used_at = now() WHERE token_hash = $1', [tokenHash]);
+		await client.query('COMMIT');
+		res.json({ message: 'Password updated successfully.' });
+	} catch (error) { await client.query('ROLLBACK'); console.error(error); res.status(500).json({ error: 'Could not reset password.' }); } finally { client.release(); }
+});
+
 router.post('/register', async (req, res) => {
 	const { name, email, password, role = 'client', phone, town = 'Kampala', trade } = req.body ?? {};
 	const cleanEmail = typeof email === 'string' ? email.trim().toLowerCase() : '';
@@ -53,12 +90,16 @@ router.post('/register', async (req, res) => {
 		res.status(400).json({ error: 'Name, email, password, and a valid role are required.' });
 		return;
 	}
-	if (password.length < 8 || password.length > 128) {
-		res.status(400).json({ error: 'Password must be at least 8 characters.' });
+	if (!validPassword(password)) {
+		res.status(400).json({ error: 'Password must be at least 10 characters and include an uppercase letter and a special character.' });
 		return;
 	}
 	if (!/^\S+@\S+\.\S+$/.test(cleanEmail)) {
 		res.status(400).json({ error: 'A valid email address is required.' });
+		return;
+	}
+	if (typeof phone !== 'string' || !isValidPhoneNumber(phone)) {
+		res.status(400).json({ error: 'A valid international phone number is required.' });
 		return;
 	}
 
@@ -109,6 +150,7 @@ router.post('/register', async (req, res) => {
 router.post('/login', async (req, res) => {
 	const email = typeof req.body?.email === 'string' ? req.body.email.trim().toLowerCase() : '';
 	const password = req.body?.password;
+	const rememberMe = req.body?.rememberMe === true;
 	if (!email || !password) {
 		res.status(400).json({ error: 'Email and password are required.' });
 		return;
@@ -125,7 +167,7 @@ router.post('/login', async (req, res) => {
 			res.status(401).json({ error: 'Invalid email or password.' });
 			return;
 		}
-		setSessionCookie(res, user);
+		setSessionCookie(res, user, rememberMe);
 		res.json({ user: publicUser(user) });
 	} catch (error) {
 		console.error(error);
@@ -140,6 +182,19 @@ router.post('/logout', (_req, res) => {
 		secure: isProduction,
 	});
 	res.status(204).send();
+});
+
+router.get('/users', requireAuth, requireRole('admin'), async (_req, res) => {
+	try {
+		const result = await pool.query(
+			`SELECT id, name, email, role, phone, town, technician_id
+			 FROM users ORDER BY created_at DESC`
+		);
+		res.json({ users: result.rows.map(publicUser) });
+	} catch (error) {
+		console.error(error);
+		res.status(500).json({ error: 'Could not load user accounts.' });
+	}
 });
 
 router.get('/me', requireAuth, async (req, res) => {

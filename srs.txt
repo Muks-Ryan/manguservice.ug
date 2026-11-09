@@ -1,0 +1,489 @@
+SOFTWARE REQUIREMENTS SPECIFICATION
+Technician Marketplace Platform
+
+A digital marketplace connecting clients with verified technicians
+
+Version 1.0
+September 2026
+
+Prepared as a Software Requirements Specification (SRS)
+
+
+Document Control
+Item	Details
+Document	Software Requirements Specification – Technician Marketplace Platform
+Version	1.0
+Date	September 2026
+Status	Initial Requirements Baseline
+System Type	Two-sided service marketplace with administrative platform
+Primary Users	Clients, Technicians, Platform Administrators
+Table of Contents
+This document is organized into the following sections:
+1. Introduction
+2. Product Vision and Background
+3. Stakeholder Analysis
+4. User Personas
+5. Scope
+6. Functional Requirements
+7. System Workflows
+8. Business Rules
+9. Data Requirements
+10. Non-Functional Requirements
+11. Security and Privacy
+12. Notifications and Communication
+13. Payments and Financial Requirements
+14. Verification, Trust and Safety
+15. Administration and Analytics
+16. External Integrations
+17. Technical and Architectural Requirements
+18. MVP Definition
+19. Future Releases
+20. Acceptance Criteria
+21. Risks and Assumptions
+1. Introduction
+1.1 Purpose
+This Software Requirements Specification defines the requirements for a technician marketplace platform that connects clients who need technical services with verified technicians who can provide those services. The platform will support discovery, job requests, technician matching, quotations, booking, communication, payment, service completion, reviews, verification, dispute management and administration.
+1.2 Objectives
+Provide clients with a reliable way to discover and engage qualified technicians.
+Increase trust through structured technician identity, professional and business verification.
+Give technicians a digital workspace for managing jobs, quotations, schedules, customers and earnings.
+Provide transparent workflows from service request through completion and review.
+Create a scalable marketplace foundation that can support multiple service categories and geographic areas.
+Provide administrators with tools for marketplace governance, verification, disputes, payments and analytics.
+1.3 Definitions
+Term	Definition
+Client	A user who requests, books or pays for technician services.
+Technician	A professional or service provider offering technical services through the platform.
+Job	A service request and its associated lifecycle, communications, documents and transactions.
+Quotation	A technician's proposed price and scope for a requested job.
+Verification	A process used to establish the authenticity of technician identity, credentials or business information.
+Marketplace	The platform connecting clients and technicians.
+Dispute	A formal issue raised by a client or technician concerning a job, payment or service.
+Service Area	The geographic area in which a technician agrees to provide services.
+2. Product Vision and Background
+The platform will function as a trusted digital marketplace for technical services. Rather than acting only as a technician directory, it will manage the complete service lifecycle: discovery or job posting, matching, quotation, booking, communication, service execution, payment, review and post-service support.
+2.1 Core Value Proposition
+For clients: access to discoverable, verified and reviewable technicians with clear service information.
+For technicians: access to customers plus tools for operating their service business digitally.
+For administrators: centralized control over users, verification, marketplace quality, payments, disputes and platform performance.
+2.2 Service Categories
+Electrical services
+Plumbing
+ICT and networking
+CCTV and security systems
+Solar and power systems
+Automotive technical services
+Appliance repair
+Air conditioning and refrigeration
+Other configurable technical categories
+3. Stakeholder Analysis
+Stakeholder	Interest / Responsibility
+Clients	Request services, compare technicians, book jobs, communicate, pay and review.
+Technicians	Create professional profiles, receive jobs, submit quotations, perform services and receive payments.
+Platform Administrators	Manage users, verification, services, disputes, transactions, content and system operations.
+Business/Operations Team	Monitor marketplace performance, service quality and customer support.
+Payment Providers	Process authorized payments, refunds and payouts.
+Mapping/Location Providers	Support geographic search, distance estimation and service areas.
+Notification Providers	Deliver email, SMS and/or push notifications.
+Regulators / Authorities	May impose applicable identity, business, tax, consumer protection or professional requirements.
+4. User Personas
+4.1 Client
+A person or organization seeking technical assistance. The client values trust, availability, transparent pricing, convenient scheduling, communication and service accountability.
+4.2 Technician
+An individual professional or technical service business seeking customers and tools to manage service operations. The technician values qualified leads, predictable workflows, reputation, earnings visibility and efficient scheduling.
+4.3 Administrator
+An authorized platform operator responsible for maintaining marketplace integrity, verifying technicians, managing disputes, monitoring transactions, moderating content and reviewing analytics.
+5. Scope
+5.1 In Scope
+Client and technician registration and authentication.
+Role-based access control.
+Technician profiles and service listings.
+Technician verification workflows.
+Service category and skill management.
+Client search and filtering.
+Job posting and service requests.
+Technician matching.
+Quotation management.
+Booking and scheduling.
+Job status tracking.
+Client-technician messaging.
+Payments and transaction records.
+Ratings and reviews.
+Favourites.
+Disputes and issue reporting.
+Warranty/service guarantee records.
+Technician earnings and payout management.
+Administrative dashboard and analytics.
+Notifications.
+Audit logging.
+File/document management.
+5.2 Out of Scope for Initial MVP
+Fully automated technical diagnosis.
+Complex real-time technician fleet tracking.
+Advanced AI image diagnosis.
+International tax automation.
+Highly customized enterprise procurement workflows.
+6. Functional Requirements
+6.1 Authentication and Accounts
+FR-001: The system shall allow clients to create accounts.
+FR-002: The system shall allow technicians to create accounts and submit professional profiles.
+FR-003: The system shall authenticate users securely.
+FR-004: The system shall support password recovery and account recovery.
+FR-005: The system shall enforce role-based permissions.
+FR-006: The system shall allow users to update permitted profile information.
+FR-007: The system shall support account deactivation subject to platform rules.
+6.2 Technician Profiles
+FR-010: Technicians shall be able to provide a profile photo or business logo.
+FR-011: Technicians shall provide service categories and skills.
+FR-012: Technicians shall provide experience information.
+FR-013: Technicians shall provide service areas.
+FR-014: Technicians shall configure working hours and availability.
+FR-015: Technicians shall optionally provide certifications, licenses and business information.
+FR-016: The system shall display verification status and verified attributes.
+FR-017: The system shall display relevant reviews and completed-job statistics.
+6.3 Technician Verification
+FR-020: The system shall support identity verification.
+FR-021: The system shall support phone and email verification.
+FR-022: The system shall support business verification where applicable.
+FR-023: The system shall support professional credential verification where applicable.
+FR-024: Administrators shall approve, reject or request additional verification information.
+FR-025: The system shall record verification dates, status and expiry where applicable.
+FR-026: The system shall prevent unauthorized changes to verified information without re-verification.
+6.4 Client Search and Discovery
+FR-030: Clients shall search by service category and skill.
+FR-031: Clients shall filter technicians by service area, availability, price range, rating and verification attributes.
+FR-032: Clients shall view technician profiles.
+FR-033: Clients shall save technicians as favourites.
+FR-034: The system shall support location-aware service-area matching.
+6.5 Job Posting
+FR-040: Clients shall create service requests.
+FR-041: Clients shall describe the problem or required service.
+FR-042: Clients shall upload supporting photographs or documents.
+FR-043: Clients shall specify preferred date/time and urgency.
+FR-044: Clients may specify an indicative budget.
+FR-045: The system shall generate a unique job identifier.
+6.6 Matching
+FR-050: The system shall identify technicians whose skills match the requested service.
+FR-051: The system shall consider service area.
+FR-052: The system shall consider technician availability.
+FR-053: The system may consider experience, verification, performance history and client preferences.
+FR-054: Matching factors shall be configurable without changing core application code where practical.
+6.7 Quotations
+FR-060: Technicians shall submit quotations for eligible jobs.
+FR-061: Quotations shall support labour, materials, transport, taxes/fees and discounts.
+FR-062: Quotations shall contain a total amount.
+FR-063: Quotations shall have an expiry date/time.
+FR-064: Clients shall accept or decline quotations.
+FR-065: Accepted quotations shall be linked to the relevant booking/job.
+6.8 Booking and Scheduling
+FR-070: Clients shall schedule service appointments.
+FR-071: Technicians shall maintain availability.
+FR-072: The system shall detect scheduling conflicts.
+FR-073: Clients and technicians shall be able to reschedule subject to applicable rules.
+FR-074: The system shall record appointment history.
+6.9 Job Lifecycle
+The primary job lifecycle shall support the following states:
+REQUESTED → QUOTED → ACCEPTED → SCHEDULED → ASSIGNED → EN_ROUTE → ARRIVED → IN_PROGRESS → COMPLETED → PAYMENT → REVIEWED
+FR-080: Authorized users shall see the current job status.
+FR-081: Status changes shall be recorded in an audit history.
+FR-082: The system shall restrict invalid state transitions.
+FR-083: Completion shall capture appropriate completion evidence where required.
+6.10 Messaging
+FR-090: Clients and technicians shall communicate through job-specific conversations.
+FR-091: Users shall be able to share permitted images and documents.
+FR-092: The system shall preserve message timestamps and participants.
+FR-093: Administrators shall have controlled access to information required for moderation, disputes and safety.
+6.11 Payments
+FR-100: The system shall record payment requests and transaction status.
+FR-101: The system shall integrate with supported payment providers.
+FR-102: The system shall record platform fees and technician earnings.
+FR-103: The system shall support refunds according to platform rules and provider capabilities.
+FR-104: The system shall maintain transaction history and receipts.
+6.12 Reviews and Reputation
+FR-110: Eligible clients shall be able to rate completed services.
+FR-111: Reviews shall be associated with completed jobs.
+FR-112: The system shall support structured rating dimensions such as quality, punctuality, professionalism and value.
+FR-113: Users shall be able to report inappropriate reviews.
+FR-114: Administrators shall moderate reported reviews.
+6.13 Disputes and Support
+FR-120: Clients and technicians shall be able to open disputes.
+FR-121: A dispute shall contain a reason, description and relevant evidence.
+FR-122: Administrators shall review and update dispute status.
+FR-123: Disputes shall have an audit trail.
+FR-124: Resolutions may include payment adjustments, refunds, closure or other permitted actions.
+6.14 Warranty
+FR-130: Technicians may define a service warranty for eligible jobs.
+FR-131: The system shall record warranty start and end dates.
+FR-132: Clients may initiate warranty claims during the active warranty period.
+FR-133: Warranty claims shall be linked to the original job.
+6.15 Technician Business Workspace
+FR-140: Technicians shall have a dashboard for incoming and active jobs.
+FR-141: Technicians shall manage quotations and appointments.
+FR-142: Technicians shall view earnings and payout history.
+FR-143: Technicians shall view customer/job history.
+FR-144: The platform may provide invoice and expense management in later releases.
+7. System Workflows
+7.1 Client Direct Booking Workflow
+1.Client searches for a service.
+2.Client filters and views technician profiles.
+3.Client selects a technician.
+4.Client submits a service request.
+5.Technician accepts the request or submits a quotation.
+6.Client accepts the quotation.
+7.Appointment is scheduled.
+8.Technician performs the service.
+9.Job is marked completed.
+10.Payment is processed.
+11.Client submits a review.
+7.2 Job Marketplace Workflow
+12.Client posts a job.
+13.System classifies the request and identifies matching technicians.
+14.Eligible technicians receive the request.
+15.Technicians submit quotations or express interest.
+16.Client reviews available proposals.
+17.Client selects a technician.
+18.Booking and payment arrangements are established.
+19.Service is performed.
+20.Job is completed and reviewed.
+8. Business Rules
+ID	Rule
+BR-001	Only authenticated users may create marketplace transactions.
+BR-002	Only technicians meeting applicable verification requirements may be publicly presented as verified.
+BR-003	A review should normally be tied to a completed job.
+BR-004	A technician may not accept overlapping appointments that violate configured scheduling rules.
+BR-005	A quotation shall not be accepted after its expiry unless renewed or explicitly allowed.
+BR-006	Only authorized administrators may approve or revoke verification.
+BR-007	Financial transactions must maintain immutable or auditable records.
+BR-008	Dispute actions must be auditable.
+BR-009	Users may only access resources permitted by their role and relationship to the resource.
+BR-010	Platform fees shall be configurable by authorized administrators.
+9. Data Requirements
+The system shall use a relational data model suitable for transactional consistency and auditability. Core entities should include:
+Users
+Roles and Permissions
+Client Profiles
+Technician Profiles
+Verification Records
+Documents
+Service Categories
+Skills
+Service Areas
+Availability
+Jobs
+Job Status History
+Job Attachments
+Quotations
+Appointments
+Messages
+Payments
+Payouts
+Reviews
+Favourites
+Disputes
+Warranty Claims
+Notifications
+Audit Logs
+9.1 Data Integrity
+Primary and foreign keys shall enforce relationships.
+Financial records shall preserve transaction history.
+Job state changes shall be auditable.
+Deleted or deactivated users shall not corrupt historical transactions.
+Uploaded documents shall have access controls and metadata.
+10. Non-Functional Requirements
+ID	Category	Requirement
+NFR-001	Performance	Normal user-facing operations should respond within an acceptable interactive time under expected MVP load.
+NFR-002	Scalability	The architecture shall support growth in users, technicians, jobs and service categories.
+NFR-003	Availability	Production services should be designed for high availability appropriate to the selected hosting architecture.
+NFR-004	Security	Authentication, authorization, encryption and secure session management shall be implemented.
+NFR-005	Usability	Core client and technician workflows shall be understandable without technical training.
+NFR-006	Accessibility	The interface should target recognized accessibility practices such as WCAG principles.
+NFR-007	Maintainability	The system shall use modular components and documented interfaces.
+NFR-008	Observability	Critical application events, errors and security events shall be logged and monitored.
+NFR-009	Backup	Critical transactional data shall be backed up according to an approved retention policy.
+NFR-010	Privacy	Personal data collection and processing shall follow applicable privacy and data-protection requirements.
+11. Security and Privacy
+Use secure authentication and password hashing through a trusted authentication mechanism.
+Implement role-based access control and resource-level authorization.
+Encrypt sensitive data in transit and use appropriate protection for sensitive data at rest.
+Protect uploaded identity and credential documents from unauthorized access.
+Apply rate limiting and abuse controls to authentication and public endpoints.
+Maintain security and administrative audit logs.
+Minimize collection of personal data to what is required for platform functions.
+Provide appropriate privacy notices, consent mechanisms and data-management processes.
+Separate administrative privileges using least-privilege principles.
+12. Notifications and Communication
+Event	Potential Channel
+Account verification	Email / SMS / In-app
+New job request	In-app / Push / Email
+Quotation received	In-app / Push / Email
+Quotation accepted	In-app / Push / Email
+Appointment reminder	Push / SMS / Email
+Technician arriving	Push / In-app
+Job completed	In-app / Email
+Payment status	In-app / Email
+Review request	Push / Email
+Dispute update	In-app / Email
+Verification expiry	Email / In-app
+13. Payments and Financial Requirements
+Payment functionality shall be implemented through compliant payment providers appropriate to the target market. The platform shall separate payment authorization, transaction recording, platform fees, refunds and technician payouts.
+Payment methods should be configurable by deployment/market.
+The system shall not store raw card data unless the chosen architecture and compliance obligations explicitly support it.
+Every financial transaction shall have a unique identifier.
+Payment and payout statuses shall be synchronized with the provider where supported.
+Refunds shall be traceable to the original transaction.
+Commission and fee calculations shall be configurable.
+14. Verification, Trust and Safety
+14.1 Technician Passport
+Each technician may have a platform-generated professional profile summarizing verified identity, verified credentials, skills, experience, completed jobs, ratings, service history and other approved reputation indicators. The system shall clearly distinguish verified facts from user-provided claims.
+14.2 Trust Controls
+Identity verification.
+Credential/document verification where applicable.
+Report and block mechanisms.
+Fraud and abuse monitoring.
+Moderation tools.
+Dispute handling.
+Audit trails.
+Warranty records.
+Clear verification labels.
+15. Administration and Analytics
+15.1 Administrative Modules
+Dashboard
+User management
+Technician verification
+Service/category management
+Job management
+Dispute management
+Payment and payout oversight
+Review moderation
+Notifications
+Content management
+System configuration
+Audit logs
+15.2 Analytics
+Registered clients and technicians
+Active users
+Jobs requested and completed
+Job conversion rate
+Average job value
+Cancellation rate
+Repeat-customer rate
+Technician response rate
+Verification statistics
+Platform revenue and fees
+Geographic demand
+Service-category demand
+16. External Integrations
+Payment gateways
+Mobile money providers where applicable
+Maps and geolocation services
+Email service providers
+SMS providers
+Push notification services
+Identity/document verification services where required
+Analytics and monitoring platforms
+Optional calendar integrations
+All integrations shall be abstracted behind defined service interfaces so that providers can be replaced without rewriting the core marketplace logic.
+17. Technical and Architectural Requirements
+17.1 High-Level Architecture
+The system should follow a modular web application architecture consisting of client applications, backend services, a relational database, object/file storage, notification services and external integrations.
+Presentation Layer: responsive web/mobile-friendly interfaces for clients, technicians and administrators.
+Application Layer: authentication, authorization, job management, matching, booking, payments, reviews, disputes and notifications.
+Data Layer: relational database for transactional records and object storage for files.
+Integration Layer: payment, maps, messaging, notification and verification providers.
+Observability Layer: logging, monitoring, metrics and audit records.
+17.2 Suggested Technology Direction
+Frontend: React + TypeScript with a component-based UI architecture.
+Backend: a structured REST/HTTP API or equivalent service architecture.
+Database: PostgreSQL or another production-grade relational database.
+File storage: object storage with private access controls.
+Authentication: managed or self-hosted secure identity service.
+Deployment: cloud-hosted architecture capable of horizontal scaling as demand increases.
+The final technology stack should be selected after detailed technical design, deployment, budget and target-market requirements are established.
+18. MVP Definition
+The MVP shall prioritize the smallest complete marketplace loop rather than implementing every planned feature.
+18.1 MVP Features
+Client registration/login.
+Technician registration/login.
+Technician profile.
+Basic technician verification workflow.
+Service categories and skills.
+Technician search and filtering.
+Client job posting.
+Basic technician matching.
+Quotation submission and acceptance.
+Booking and scheduling.
+Job status tracking.
+Client-technician messaging.
+Basic payment integration.
+Job completion.
+Ratings and reviews.
+Basic admin dashboard.
+Basic notifications.
+Audit logging.
+18.2 MVP Success Measures
+A client can successfully complete a service request from discovery/posting to completion.
+A technician can receive, accept and complete a job.
+The platform can maintain an auditable transaction and job history.
+Administrators can verify technicians and intervene in problematic jobs.
+Users can provide post-service feedback.
+19. Future Releases
+19.1 Release 2
+Advanced technician business workspace.
+Invoicing and expenses.
+Advanced payouts.
+Warranty management.
+Advanced disputes.
+Enhanced analytics.
+Advanced search and matching.
+19.2 Release 3
+AI-assisted job classification.
+AI-assisted quotation preparation.
+Preliminary image-based issue classification with clear limitations.
+Demand forecasting.
+Personalized service recommendations.
+Advanced fraud/anomaly detection.
+19.3 Long-Term
+Mobile applications.
+Enterprise client accounts.
+Technician teams and subcontractor management.
+Multi-country/multi-currency support.
+Public technician professional profiles.
+API ecosystem for external businesses.
+20. Acceptance Criteria
+Area	Acceptance Criterion
+Registration	Clients and technicians can create accounts and authenticate successfully.
+Verification	Administrators can review and approve/reject technician verification submissions.
+Discovery	Clients can search and filter technicians using configured service attributes.
+Job	Clients can create a job with service description, scheduling information and attachments.
+Matching	The system can identify technicians matching the required service and service area.
+Quotation	Technicians can submit quotations and clients can accept or decline them.
+Booking	An accepted job can be scheduled without invalid conflicts.
+Communication	Client and technician can communicate within the job context.
+Completion	A job can progress through valid states to completion.
+Payment	A supported payment flow records transaction status and amount.
+Review	A completed job can receive a review subject to platform rules.
+Administration	Authorized administrators can manage users, jobs, verification and disputes.
+Audit	Critical status, administrative and financial events are traceable.
+21. Risks and Assumptions
+21.1 Risks
+Fraudulent technician identities or credentials.
+Poor service quality despite verification.
+Payment fraud and chargebacks.
+Disputes over job scope or quotation changes.
+Privacy risks involving identity documents and location information.
+Marketplace imbalance between technician supply and client demand.
+Operational complexity of refunds, warranties and disputes.
+Dependence on third-party payment, mapping and messaging providers.
+21.2 Assumptions
+The platform will initially operate in a defined target market and service area.
+Applicable legal, payment, consumer-protection and data-protection requirements will be assessed before production deployment.
+Technician verification requirements will vary according to service category and jurisdiction.
+The first release will prioritize web access and a complete service lifecycle.
+Appendix A – Recommended Core Navigation
+Role	Primary Navigation
+Client	Home | Find Technicians | Post a Job | My Jobs | Messages | Payments | Favourites | Profile
+Technician	Dashboard | Job Requests | My Jobs | Quotes | Calendar | Customers | Earnings | Profile | Verification
+Administrator	Dashboard | Users | Technicians | Verification | Jobs | Disputes | Payments | Services | Reviews | Notifications | Analytics | Audit Logs | Settings
+Appendix B – Core Job State Model
+REQUESTED → QUOTED → ACCEPTED → SCHEDULED → ASSIGNED → EN_ROUTE → ARRIVED → IN_PROGRESS → COMPLETED → PAYMENT → REVIEWED
+The implementation should define valid transitions, authorized actors, required data and rollback/cancellation behavior for every state.

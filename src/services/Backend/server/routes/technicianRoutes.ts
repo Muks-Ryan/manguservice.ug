@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { pool } from '../db';
 import { requireAuth, requireRole } from '../middleware/auth';
 
+
 const router = Router();
 
 const technicianSelect = `

@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Wrench, CheckCircle2, Clock, MapPin, Phone, Mail, Edit3, ShieldCheck, AlertCircle, Sparkles, ArrowRight } from 'lucide-react';
-import { Technician, TechnicianStatus, User } from '../../types';
+import { Booking, Technician, TechnicianStatus, User } from '../../types';
 import { technicianService } from '../../services/technicianService';
+import { bookingService } from '../../services/bookingService';
 import { TechnicianFormModal } from '../TechnicianFormModal';
 
 interface TechnicianDashboardProps {
@@ -10,6 +11,8 @@ interface TechnicianDashboardProps {
   onRefreshData: () => Promise<void>;
   onShowToast: (title: string, message: string, type?: 'success' | 'error' | 'info') => void;
   onNavigateToSettings: () => void;
+  bookings: Booking[];
+  onBookingsChange: () => Promise<void>;
 }
 
 export const TechnicianDashboard: React.FC<TechnicianDashboardProps> = ({
@@ -18,6 +21,8 @@ export const TechnicianDashboard: React.FC<TechnicianDashboardProps> = ({
   onRefreshData,
   onShowToast,
   onNavigateToSettings,
+  bookings,
+  onBookingsChange,
 }) => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [updatingStatus, setUpdatingStatus] = useState(false);
@@ -45,6 +50,16 @@ export const TechnicianDashboard: React.FC<TechnicianDashboardProps> = ({
       onShowToast('Profile Updated', 'Your technician profile and rates were successfully updated.', 'success');
     } catch (err: any) {
       onShowToast('Update Failed', err.message || 'Could not save technician updates.', 'error');
+    }
+  };
+
+  const updateBooking = async (id: string, status: 'Accepted' | 'Declined' | 'Completed') => {
+    try {
+      await bookingService.updateStatus(id, status);
+      await onBookingsChange();
+      onShowToast('Booking updated', `The request is now ${status.toLowerCase()}.`, 'success');
+    } catch (error: any) {
+      onShowToast('Booking update failed', error.message || 'Could not update booking.', 'error');
     }
   };
 
@@ -145,6 +160,11 @@ export const TechnicianDashboard: React.FC<TechnicianDashboardProps> = ({
       </div>
 
       {/* Profile Overview Card & Quick Actions */}
+      {bookings.length > 0 && <section className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 shadow-xs space-y-3">
+        <div className="flex items-center justify-between"><h2 className="font-bold text-slate-900 dark:text-white">Incoming service requests</h2><span className="text-xs text-slate-500">{bookings.length} total</span></div>
+        <div className="space-y-3">{bookings.map((booking) => <div key={booking.id} className="border-t border-slate-100 dark:border-slate-800 pt-3 flex flex-col lg:flex-row lg:items-center justify-between gap-3 text-xs"><div><p className="font-bold text-slate-900 dark:text-white">{booking.clientName} · {booking.trade}</p><p className="text-slate-600 dark:text-slate-400">{booking.serviceDescription}</p><p className="text-slate-500">{new Date(booking.scheduledFor).toLocaleString()} · {booking.estimatedHours} hr · UGX {Number(booking.estimatedCostUgx).toLocaleString()}</p></div><div className="flex items-center gap-2"><span className="font-bold text-amber-700 dark:text-amber-300">{booking.status}</span>{booking.status === 'Pending' && <><button onClick={() => updateBooking(booking.id, 'Accepted')} className="px-2.5 py-1.5 rounded-lg bg-emerald-600 text-white font-bold">Accept</button><button onClick={() => updateBooking(booking.id, 'Declined')} className="px-2.5 py-1.5 rounded-lg bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-white font-bold">Decline</button></>}{booking.status === 'Accepted' && <button onClick={() => updateBooking(booking.id, 'Completed')} className="px-2.5 py-1.5 rounded-lg bg-blue-600 text-white font-bold">Mark complete</button>}</div></div>)}</div>
+      </section>}
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left 2 Cols: Detailed Card */}
         <div className="lg:col-span-2 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-6 shadow-xs space-y-6">

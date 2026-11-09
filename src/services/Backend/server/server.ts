@@ -11,6 +11,7 @@ import rateLimit from "express-rate-limit"; // Import rateLimit to slow repeated
 
 import authRoutes from "./routes/authRoutes"; // Import authentication routes
 import technicianRoutes from "./routes/technicianRoutes"; // Import technician routes
+import bookingRoutes from "./routes/bookingRoutes";
 
 dotenv.config(); // Load environment variables from .env file
 
@@ -44,15 +45,28 @@ app.use(cookieParser()); // Use cookie-parser to parse cookies
 const authLimiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: 20, standardHeaders: 'draft-8', legacyHeaders: false });
 const apiLimiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: 300, standardHeaders: 'draft-8', legacyHeaders: false });
 
+const normalizeOrigin = (value: string) => {
+  const trimmed = value.trim().replace(/\/$/, '');
+  if (!trimmed) return '';
+  try {
+    return new URL(trimmed).origin;
+  } catch {
+    return trimmed;
+  }
+};
+
 const allowedOrigins = (process.env.FRONTEND_URL || 'http://localhost:3000')
   .split(',')
-  .map((origin) => origin.trim())
+  .map(normalizeOrigin)
   .filter(Boolean);
+
+const developmentHosts = new Set(['http://localhost:3000', 'http://127.0.0.1:3000', 'http://localhost:5173', 'http://127.0.0.1:5173']);
 
 // Configure CORS to allow requests from the configured frontend origin(s)
 app.use(cors({
   origin: (origin, callback) => {
-    if (!origin || allowedOrigins.includes(origin)) {
+    const normalizedOrigin = origin ? normalizeOrigin(origin) : '';
+    if (!origin || allowedOrigins.includes(normalizedOrigin) || developmentHosts.has(normalizedOrigin)) {
       callback(null, true);
       return;
     }
@@ -67,6 +81,7 @@ app.use('/api/auth', authLimiter); // Apply a stricter limit to authentication e
 // Define routes for authentication and technician-related operations
 app.use("/api/auth", authRoutes);
 app.use("/api/technicians", technicianRoutes);
+app.use("/api/bookings", bookingRoutes);
 
 // Define a health check endpoint to verify that the server is running
 app.get('/api/health', (req, res) => {

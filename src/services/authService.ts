@@ -6,6 +6,7 @@ let currentUser: User | null = null;
 const API_BASE_URL = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
 
 type AuthResponse = { user: User };
+type PasswordResetResponse = { message: string; resetToken?: string };
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const url = `${API_BASE_URL}${path}`;
@@ -38,10 +39,10 @@ export const authService = {
   },
 
   // Authenticate against PostgreSQL through Express and enforce the requested portal role.
-  async login(email: string, password: string, allowedRoles?: UserRole | UserRole[]): Promise<User> {
+  async login(email: string, password: string, allowedRoles?: UserRole | UserRole[], rememberMe = false): Promise<User> {
     const result = await request<AuthResponse>('/api/auth/login', {
       method: 'POST',
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ email, password, rememberMe }),
     });
     const roles = allowedRoles ? (Array.isArray(allowedRoles) ? allowedRoles : [allowedRoles]) : undefined;
     if (roles && !roles.includes(result.user.role)) {
@@ -79,6 +80,20 @@ export const authService = {
     return currentUser;
   },
 
+  async requestPasswordReset(email: string): Promise<PasswordResetResponse> {
+    return request<PasswordResetResponse>('/api/auth/forgot-password', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+    });
+  },
+
+  async resetPassword(token: string, password: string): Promise<void> {
+    await request<void>('/api/auth/reset-password', {
+      method: 'POST',
+      body: JSON.stringify({ token, password }),
+    });
+  },
+
   // Update the authenticated profile through Express and synchronize linked technician data.
   async updateProfile(userId: string, updates: Partial<Pick<User, 'name' | 'phone' | 'town'>>): Promise<User> {
     if (!currentUser || currentUser.id !== userId) throw new Error('You can only update your own profile.');
@@ -88,6 +103,11 @@ export const authService = {
     });
     currentUser = result.user;
     return currentUser;
+  },
+
+  async getUsers(): Promise<User[]> {
+    const result = await request<{ users: User[] }>('/api/auth/users');
+    return result.users;
   },
 
   // Keep non-sensitive platform display settings local until a settings endpoint is added.

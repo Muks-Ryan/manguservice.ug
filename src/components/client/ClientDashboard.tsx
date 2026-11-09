@@ -1,14 +1,20 @@
 import React, { useState } from 'react';
-import { Search, MapPin, Phone, Eye, Bookmark, BookmarkCheck, CheckCircle, Sparkles, Filter } from 'lucide-react';
-import { Technician, User, FilterOptions } from '../../types';
+import { Search, MapPin, Phone, Eye, Bookmark, BookmarkCheck, CheckCircle, Sparkles, Filter, CalendarDays } from 'lucide-react';
+import { Booking, Technician, User, FilterOptions } from '../../types';
 import { ContactTechnicianModal } from './ContactTechnicianModal';
+import { BookingModal } from './BookingModal';
+import { bookingService } from '../../services/bookingService';
 import { TechnicianDetailsModal } from '../TechnicianDetailsModal';
+import { TOWNS, TRADES } from '../../services/technicianService';
 
 interface ClientDashboardProps {
   user: User;
   technicians: Technician[];
   filters: FilterOptions;
   onFilterChange: (filters: FilterOptions) => void;
+  bookings: Booking[];
+  onBookingsChange: () => Promise<void>;
+  onShowToast: (title: string, message: string, type?: 'success' | 'error' | 'info') => void;
 }
 
 export const ClientDashboard: React.FC<ClientDashboardProps> = ({
@@ -16,6 +22,9 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({
   technicians,
   filters,
   onFilterChange,
+  bookings,
+  onBookingsChange,
+  onShowToast,
 }) => {
   const [activeTab, setActiveTab] = useState<'all' | 'saved'>('all');
   const [savedIds, setSavedIds] = useState<string[]>(() => {
@@ -29,6 +38,18 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({
 
   const [viewingTech, setViewingTech] = useState<Technician | null>(null);
   const [contactingTech, setContactingTech] = useState<Technician | null>(null);
+  const [bookingTech, setBookingTech] = useState<Technician | null>(null);
+
+  const handleBooking = async (data: { technicianId: string; serviceDescription: string; scheduledFor: string; estimatedHours: number }) => {
+    try {
+      await bookingService.create(data);
+      await onBookingsChange();
+      onShowToast('Request sent', 'The technician can now accept or decline your booking.', 'success');
+    } catch (error: any) {
+      onShowToast('Booking failed', error.message || 'Could not send booking request.', 'error');
+      throw error;
+    }
+  };
 
   const toggleSave = (id: string) => {
     setSavedIds((prev) => {
@@ -42,8 +63,8 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({
     ? technicians.filter((t) => savedIds.includes(t.id))
     : technicians;
 
-  const trades = ['ALL', 'Electrical', 'Plumbing', 'Appliance Repair', 'ICT & Computers', 'Carpentry', 'Auto Mechanics', 'Welding & Metalwork'];
-  const towns = ['ALL', 'Kampala', 'Entebbe', 'Jinja', 'Mbarara', 'Gulu', 'Mukono'];
+  const trades = ['ALL', ...TRADES];
+  const towns = ['ALL', ...TOWNS];
 
   return (
     <div className="space-y-6">
@@ -138,6 +159,11 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({
         </div>
       </div>
 
+      {bookings.length > 0 && <section className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 space-y-3">
+        <div className="flex items-center justify-between"><h2 className="font-bold text-slate-900 dark:text-white">Your service requests</h2><span className="text-xs text-slate-500">{bookings.length} total</span></div>
+        <div className="space-y-2">{bookings.map((booking) => <div key={booking.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-t border-slate-100 dark:border-slate-800 pt-3 text-xs"><div><p className="font-bold text-slate-900 dark:text-white">{booking.trade} with {booking.technicianName}</p><p className="text-slate-500">{new Date(booking.scheduledFor).toLocaleString()} · UGX {Number(booking.estimatedCostUgx).toLocaleString()}</p></div><div className="flex items-center gap-2"><span className="font-bold text-blue-700 dark:text-blue-300">{booking.status}</span>{['Pending', 'Accepted'].includes(booking.status) && <button onClick={async () => { try { await bookingService.updateStatus(booking.id, 'Cancelled'); await onBookingsChange(); onShowToast('Booking cancelled', 'The request was cancelled.', 'info'); } catch (error: any) { onShowToast('Update failed', error.message, 'error'); } }} className="text-red-600 hover:underline">Cancel</button>}</div></div>)}</div>
+      </section>}
+
       {/* Technicians Grid */}
       {displayedTechnicians.length === 0 ? (
         <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-12 text-center space-y-3">
@@ -163,7 +189,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {displayedTechnicians.map((tech) => {
             const isSaved = savedIds.includes(tech.id);
-            const isAvailable = tech.status === 'Available';
+            const isBookable = tech.status === 'Available' || tech.status === 'Active';
 
             return (
               <div
@@ -219,12 +245,12 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({
 
                     <span
                       className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                        isAvailable
+                        isBookable
                           ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800'
                           : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300'
                       }`}
                     >
-                      {isAvailable && <CheckCircle className="w-3 h-3 text-emerald-500" />}
+                      {isBookable && <CheckCircle className="w-3 h-3 text-emerald-500" />}
                       <span>{tech.status}</span>
                     </span>
                   </div>
@@ -238,6 +264,14 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({
                 {/* Actions */}
                 <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center gap-2">
                   <button
+                    onClick={() => setContactingTech(tech)}
+                    aria-label={`Contact ${tech.name}`}
+                    title={`Contact ${tech.name}`}
+                    className="w-9 h-9 shrink-0 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 flex items-center justify-center hover:bg-emerald-100 dark:hover:bg-emerald-900/60"
+                  >
+                    <Phone className="w-4 h-4" />
+                  </button>
+                  <button
                     onClick={() => setViewingTech(tech)}
                     className="flex-1 py-2 px-3 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-bold transition-colors flex items-center justify-center gap-1.5"
                   >
@@ -246,11 +280,13 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({
                   </button>
 
                   <button
-                    onClick={() => setContactingTech(tech)}
-                    className="flex-1 py-2 px-3 rounded-xl bg-blue-600 hover:bg-blue-700 active:scale-98 text-white text-xs font-bold transition-all shadow-xs flex items-center justify-center gap-1.5"
+                    onClick={() => setBookingTech(tech)}
+                    disabled={!isBookable}
+                    title={isBookable ? 'Book this technician' : 'This technician is not accepting bookings'}
+                    className="flex-1 py-2 px-3 rounded-xl bg-blue-600 hover:bg-blue-700 active:scale-98 disabled:bg-slate-300 disabled:text-slate-600 disabled:cursor-not-allowed dark:disabled:bg-slate-700 dark:disabled:text-slate-400 text-white text-xs font-bold transition-all shadow-xs flex items-center justify-center gap-1.5"
                   >
-                    <Phone className="w-3.5 h-3.5" />
-                    <span>Contact</span>
+                    <CalendarDays className="w-3.5 h-3.5" />
+                    <span>{isBookable ? 'Book' : 'Unavailable'}</span>
                   </button>
                 </div>
               </div>
@@ -270,6 +306,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({
         technician={contactingTech}
         onClose={() => setContactingTech(null)}
       />
+      <BookingModal technician={bookingTech} onClose={() => setBookingTech(null)} onSubmit={handleBooking} />
     </div>
   );
 };
